@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Grades Search</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: #f5f7fa;
+      color: #000;
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    header {
+      background: #2c5aa0;
+      color: white;
+      padding: 25px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
+    .subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    .search-section {
+      padding: 25px;
+      text-align: center;
+      border-bottom: 1px solid #eaeaea;
+    }
+    .search-box {
+      display: flex;
+      max-width: 400px;
+      margin: 0 auto;
+      border: 2px solid #eaeaea;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .search-box:focus-within {
+      border-color: #2c5aa0;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 12px 15px;
+      border: none;
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-box button {
+      background: #2c5aa0;
+      color: white;
+      border: none;
+      padding: 0 20px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .search-box button:hover {
+      background: #1e4080;
+    }
+    .instructions {
+      margin-top: 10px;
+      color: #666;
+      font-size: 0.85rem;
+    }
+    .results-section {
+      padding: 25px;
+      display: none;
+    }
+    .student-info {
+      background: #f0f4f8;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .student-name {
+      font-size: 1.5rem;
+      color: #2c5aa0;
+      margin-bottom: 5px;
+    }
+    .student-id {
+      color: #666;
+      font-size: 1rem;
+    }
+    .grades-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      border: 1px solid #eaeaea;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .grades-table th {
+      background: #eaeaea;
+      padding: 12px 15px;
+      text-align: left;
+      font-weight: 600;
+      color: #000;
+    }
+    .grades-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eaeaea;
+      color: #000;
+    }
+    .grades-table tr:last-child td {
+      border-bottom: none;
+    }
+    .subject-name {
+      font-weight: 600;
+    }
+    .grade-value {
+      text-align: center;
+      font-weight: 600;
+      color: #000;
+    }
+    .total-row {
+      background: #e8f0fe;
+      font-weight: bold;
+    }
+    .total-row td {
+      padding: 14px 15px;
+      color: #000;
+    }
+    .no-results {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+      display: none;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      color: #666;
+      font-size: 0.85rem;
+      border-top: 1px solid #eaeaea;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Student Grades Portal</h1>
+      <p class="subtitle">Search for your grades using your National ID</p>
+    </header>
+
+    <div class="search-section">
+      <div class="search-box">
+        <input type="text" id="nationalIdInput" placeholder="Enter your National ID" />
+        <button id="searchButton">Search</button>
+      </div>
+      <p class="instructions">Enter your 14-digit National ID to view your grades</p>
+    </div>
+
+    <div class="no-results" id="noResults">
+      <i>🔍</i>
+      <h3>No student found</h3>
+      <p>Please check your National ID and try again</p>
+    </div>
+
+    <div class="results-section" id="resultsSection">
+      <div class="student-info">
+        <h2 class="student-name" id="studentName">-</h2>
+        <p class="student-id">National ID: <span id="studentNationalId">-</span></p>
+      </div>
+
+      <table class="grades-table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Grade</th>
+            <th>Out of</th>
+          </tr>
+        </thead>
+        <tbody id="gradesTableBody"></tbody>
+      </table>
+    </div>
+
+    <footer>
+      <p>Student Grades Management System &copy; 2023</p>
+    </footer>
+  </div>
+
+  <script>
+    const students = [
+  {
+    "الاسم": "محمد وليد سعيد محمود",
+    "الرقم القومي": "30810011404053",
+    "Arabic": 18.5,
+    "English": 18,
+    "Math": 14,
+    "Mechanics": 7.5,
+    "Physics": 18,
+    "social studies": 17,
+    "المجموع": 93,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "مي محمد حسن اسماعيل الباهي",
+    "الرقم القومي": "31004018800687",
+    "Arabic": 19.5,
+    "English": 19,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 19.5,
+    "social studies": 20,
+    "المجموع": 103,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "احمد حازم محمود راشد",
+    "الرقم القومي": "30811268800738",
+    "Arabic": 19.5,
+    "English": 19,
+    "Math": 10.5,
+    "Mechanics": 9.5,
+    "Physics": 18.5,
+    "social studies": 20,
+    "المجموع": 97,
+    "Religion": 7
+  },
+  {
+    "الاسم": "حنين احمد سيد عبدالرؤف",
+    "الرقم القومي": "30812180100104",
+    "Arabic": 19,
+    "English": 19.5,
+    "Math": 14,
+    "Mechanics": 10,
+    "Physics": 18,
+    "social studies": 20,
+    "المجموع": 100.5,
+    "Religion": 8.5
+  },
+  {
+    "الاسم": "يوسف محمد عبد الحميد فتحي محمد علي",
+    "الرقم القومي": "30906210102195",
+    "Arabic": 19,
+    "English": 14,
+    "Math": 12,
+    "Mechanics": 9,
+    "Physics": 6.5,
+    "social studies": 14.5,
+    "المجموع": 75,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "الاء احمد فهمي سليمان",
+    "الرقم القومي": "30811032100344",
+    "Arabic": 20,
+    "English": 19,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 19,
+    "social studies": 20,
+    "المجموع": 103,
+    "Religion": 8
+  },
+  {
+    "الاسم": "سفيان علاء سيد سيف الدين علي",
+    "الرقم القومي": "30904012100974",
+    "Arabic": 18.5,
+    "English": 17.5,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 19,
+    "المجموع": 100,
+    "Religion": 8.5
+  },
+  {
+    "الاسم": "مجدى منصور عبدالعليم على",
+    "الرقم القومي": "30912050500431",
+    "Arabic": 17.5,
+    "English": 17,
+    "Math": 15,
+    "Mechanics": 9.5,
+    "Physics": 18,
+    "social studies": 15.5,
+    "المجموع": 92.5,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "كنزي محمد رجب ابراهيم محمد",
+    "الرقم القومي": "30905022100502",
+    "Arabic": 18.5,
+    "English": 17,
+    "Math": 13,
+    "Mechanics": 9,
+    "Physics": 11,
+    "social studies": 17,
+    "المجموع": 85.5,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "غزل احمد ممدوح جبر",
+    "الرقم القومي": "30908020300325",
+    "Arabic": 17,
+    "English": 18.5,
+    "Math": 13.5,
+    "Mechanics": 5.5,
+    "Physics": 14,
+    "social studies": 17.5,
+    "المجموع": 86,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "احمد علي احمد مصطفي",
+    "الرقم القومي": "30806250100514",
+    "Arabic": 20,
+    "English": 14,
+    "Math": 12,
+    "Mechanics": 8,
+    "Physics": 15.5,
+    "social studies": 18.5,
+    "المجموع": 88,
+    "Religion": 10
+  },
+  {
+    "الاسم": "تقي رضا احمد تامر عبد الرازق",
+    "الرقم القومي": "31003230601108",
+    "Arabic": 20,
+    "English": 19.5,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 20,
+    "المجموع": 104.5,
+    "Religion": 9
+  },
+  {
+    "الاسم": "غنى احمد ممدوح جبر",
+    "الرقم القومي": "30908020300341",
+    "Arabic": 18,
+    "English": 18.5,
+    "Math": 13,
+    "Mechanics": 9,
+    "Physics": 11.5,
+    "social studies": 19,
+    "المجموع": 89,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "حسين هشام حسين يونس",
+    "الرقم القومي": "30902210104672",
+    "Arabic": 14,
+    "English": 17.5,
+    "Math": 13.5,
+    "Mechanics": 7,
+    "Physics": 12,
+    "social studies": 16,
+    "المجموع": 80,
+    "Religion": 6
+  },
+  {
+    "الاسم": "محمد حسني عطيتو سعيد عبد اللاهي",
+    "الرقم القومي": "30804082100411",
+    "Arabic": 18.5,
+    "English": 19,
+    "Math": 13,
+    "Mechanics": 5,
+    "Physics": 16.5,
+    "social studies": 18.5,
+    "المجموع": 90.5,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "رنا احمد محمد جمعه محمد",
+    "الرقم القومي": "30901130101447",
+    "Arabic": 20,
+    "English": 18,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 20,
+    "المجموع": 103,
+    "Religion": 8
+  },
+  {
+    "الاسم": "كريم عبدالمنعم محمد محمد عبدالمنعم محمد",
+    "الرقم القومي": "30803272104751",
+    "Arabic": 20,
+    "English": 17,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 20,
+    "المجموع": 102,
+    "Religion": 8.5
+  },
+  {
+    "الاسم": "جني محمد سيد حسن",
+    "الرقم القومي": "30906111400826",
+    "Arabic": 20,
+    "English": 16,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 17.5,
+    "social studies": 20,
+    "المجموع": 98.5,
+    "Religion": 5
+  },
+  {
+    "الاسم": "ياسين اشرف عبدالرازق سيد احمد البيه",
+    "الرقم القومي": "30904280104036",
+    "Arabic": 16.5,
+    "English": 18,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 20,
+    "المجموع": 99.5,
+    "Religion": 7
+  },
+  {
+    "الاسم": "إياد أيمن ناجي احمد",
+    "الرقم القومي": "31002132102415",
+    "Arabic": 16.5,
+    "English": 15,
+    "Math": 14,
+    "Mechanics": 10,
+    "Physics": 13.5,
+    "social studies": 20,
+    "المجموع": 89,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "حسن فتحي حسن محمود محمد",
+    "الرقم القومي": "30804240103652",
+    "Arabic": 17.5,
+    "English": 15,
+    "Math": 14.5,
+    "Mechanics": 7.5,
+    "Physics": 13,
+    "social studies": 15.5,
+    "المجموع": 83,
+    "Religion": 2
+  },
+  {
+    "الاسم": "ريتاج ابراهيم عبدالرحمن المهدي",
+    "الرقم القومي": "30711100107765",
+    "Arabic": 20,
+    "English": 16,
+    "Math": 15,
+    "Mechanics": 9.5,
+    "Physics": 18.5,
+    "social studies": 20,
+    "المجموع": 99,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "سيف علاء سيد عثمان الشيمي",
+    "الرقم القومي": "30903180601311",
+    "Arabic": 17,
+    "English": 16,
+    "Math": 15,
+    "Mechanics": 7,
+    "Physics": 14,
+    "social studies": 14.5,
+    "المجموع": 83.5,
+    "Religion": 4.5
+  },
+  {
+    "الاسم": "سما عادل احمد عبد المقصود ابراهيم",
+    "الرقم القومي": "30903142102062",
+    "Arabic": 17,
+    "English": 17,
+    "Math": 15,
+    "Mechanics": 5,
+    "Physics": 10,
+    "social studies": 19,
+    "المجموع": 83,
+    "Religion": 8
+  },
+  {
+    "الاسم": "عبدالعزيز علي عبدالعزيز القلشي",
+    "الرقم القومي": "30906251701532",
+    "Arabic": 16.5,
+    "English": 16.5,
+    "Math": 15,
+    "Mechanics": 9.5,
+    "Physics": 15.5,
+    "social studies": 19.5,
+    "المجموع": 92.5,
+    "Religion": 8.5
+  },
+  {
+    "الاسم": "احمد عيد شعبان رمضان بركات",
+    "الرقم القومي": "30905100500091",
+    "Arabic": 18,
+    "English": 16.5,
+    "Math": 15,
+    "Mechanics": 9,
+    "Physics": 14.5,
+    "social studies": 20,
+    "المجموع": 93,
+    "Religion": 5.5
+  },
+  {
+    "الاسم": "فاطمه ابراهيم محمد ابراهيم",
+    "الرقم القومي": "30904162701704",
+    "Arabic": 17,
+    "English": 14.5,
+    "Math": 10.5,
+    "Mechanics": 5,
+    "Physics": 13.5,
+    "social studies": 19,
+    "المجموع": 79.5,
+    "Religion": 7
+  },
+  {
+    "الاسم": "مهند علاء عبد المنعم عبد اللاه عرفه",
+    "الرقم القومي": "30808252100972",
+    "Arabic": 14.5,
+    "English": 13,
+    "Math": 10.5,
+    "Mechanics": 6,
+    "Physics": 16,
+    "social studies": 18.5,
+    "المجموع": 78.5,
+    "Religion": 5
+  },
+  {
+    "الاسم": "يوسف سيد سعيد عبد الحميد رزق",
+    "الرقم القومي": "30901080602091",
+    "Arabic": 15,
+    "English": 16,
+    "Math": 12,
+    "Mechanics": 3,
+    "Physics": 15.5,
+    "social studies": 20,
+    "المجموع": 81.5,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "محمد حسين الدسوقي رضوان محمد",
+    "الرقم القومي": "31003262101778",
+    "Arabic": "غ",
+    "English": "غ",
+    "Math": "غ",
+    "Mechanics": "غ",
+    "Physics": "غ",
+    "social studies": "غ",
+    "المجموع": "غ",
+    "Religion": "غ"
+  },
+  {
+    "الاسم": "فاطمه جمعه عبدالظاهر حمزه",
+    "الرقم القومي": "30909012802644",
+    "Arabic": 18,
+    "English": 16,
+    "Math": 15,
+    "Mechanics": 7,
+    "Physics": 17,
+    "social studies": 20,
+    "المجموع": 93,
+    "Religion": 6
+  },
+  {
+    "الاسم": "يمنى رضا محمد احمد ابراهيم",
+    "الرقم القومي": "30904021202089",
+    "Arabic": 17.5,
+    "English": 17,
+    "Math": 11,
+    "Mechanics": 10,
+    "Physics": 17.5,
+    "social studies": 20,
+    "المجموع": 93,
+    "Religion": 8.5
+  },
+  {
+    "الاسم": "محمود عماد محمود محمد",
+    "الرقم القومي": "30811110102391",
+    "Arabic": 18,
+    "English": 16,
+    "Math": 15,
+    "Mechanics": 9,
+    "Physics": 13,
+    "social studies": 19,
+    "المجموع": 90,
+    "Religion": 7
+  },
+  {
+    "الاسم": "سما صلاح سيد عبدالسلام الديب",
+    "الرقم القومي": "30901201403644",
+    "Arabic": 19.5,
+    "English": 16.5,
+    "Math": 15,
+    "Mechanics": 9.5,
+    "Physics": 14,
+    "social studies": 18,
+    "المجموع": 92.5,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "فاطمه محمد عبد الحميد سيد",
+    "الرقم القومي": "30811152107601",
+    "Arabic": 19,
+    "English": 16.5,
+    "Math": 14,
+    "Mechanics": 9,
+    "Physics": 18.5,
+    "social studies": 20,
+    "المجموع": 97,
+    "Religion": 8.5
+  },
+  {
+    "الاسم": "كريم احمد عبدالرحمن محمد",
+    "الرقم القومي": "30908070500619",
+    "Arabic": 18.5,
+    "English": 17.5,
+    "Math": 15,
+    "Mechanics": 9.5,
+    "Physics": 11.5,
+    "social studies": 16.5,
+    "المجموع": 88.5,
+    "Religion": 6
+  },
+  {
+    "الاسم": "مهند اسامة محمد حسين",
+    "الرقم القومي": "30804252105138",
+    "Arabic": 16.5,
+    "English": 17,
+    "Math": 15,
+    "Mechanics": 9,
+    "Physics": 17,
+    "social studies": 19.5,
+    "المجموع": 94,
+    "Religion": 6
+  },
+  {
+    "الاسم": "حمزه احمد عثمان ابو العلا",
+    "الرقم القومي": "30910042101479",
+    "Arabic": 19,
+    "English": 15.5,
+    "Math": 14,
+    "Mechanics": 5.5,
+    "Physics": 13,
+    "social studies": 16.5,
+    "المجموع": 83.5,
+    "Religion": 8.5
+  },
+  {
+    "الاسم": "لجين محمد صالح عباس محجوب",
+    "الرقم القومي": "30802202100469",
+    "Arabic": 20,
+    "English": 20,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 20,
+    "المجموع": 105,
+    "Religion": 9
+  },
+  {
+    "الاسم": "محمد مصطفي فتحي سليمان عبدالله",
+    "الرقم القومي": "30911150103611",
+    "Arabic": 20,
+    "English": 19,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 20,
+    "المجموع": 104,
+    "Religion": 9
+  },
+  {
+    "الاسم": "حسين احمد حسين علي",
+    "الرقم القومي": "30902201404094",
+    "Arabic": 16.5,
+    "English": 12.5,
+    "Math": 13,
+    "Mechanics": 3,
+    "Physics": 10,
+    "social studies": 17.5,
+    "المجموع": 72.5,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "جمال محمود عبدالكريم احمد ابراهيم",
+    "الرقم القومي": "30812012105036",
+    "Arabic": 10,
+    "English": 13,
+    "Math": 5,
+    "Mechanics": 9,
+    "Physics": 9.5,
+    "social studies": 17.5,
+    "المجموع": 64,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "سما خالد رياض عبدالمنعم عساكر",
+    "الرقم القومي": "30711112107248",
+    "Arabic": 14.5,
+    "English": 10.5,
+    "Math": 10,
+    "Mechanics": 6.5,
+    "Physics": 9,
+    "social studies": 16.5,
+    "المجموع": 67,
+    "Religion": 4.5
+  },
+  {
+    "الاسم": "ندى صفاء على نور على بكر",
+    "الرقم القومي": "30906141403307",
+    "Arabic": 20,
+    "English": 19.5,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 20,
+    "المجموع": 104.5,
+    "Religion": 10
+  },
+  {
+    "الاسم": "ملك محمد فؤاد محمود علي",
+    "الرقم القومي": "31003210600806",
+    "Arabic": 13,
+    "English": 16,
+    "Math": 10.5,
+    "Mechanics": 5,
+    "Physics": 13,
+    "social studies": 16,
+    "المجموع": 73.5,
+    "Religion": 7
+  },
+  {
+    "الاسم": "سمية محمد ابراهيم محمود",
+    "الرقم القومي": "30805090100427",
+    "Arabic": 18,
+    "English": 19,
+    "Math": 15,
+    "Mechanics": 8,
+    "Physics": 10.5,
+    "social studies": 16.5,
+    "المجموع": 87,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "سما يسري عبد الحميد محمد",
+    "الرقم القومي": "30905101801168",
+    "Arabic": 18,
+    "English": 14.5,
+    "Math": 13.5,
+    "Mechanics": 4,
+    "Physics": 7.5,
+    "social studies": 19.5,
+    "المجموع": 77,
+    "Religion": 8
+  },
+  {
+    "الاسم": "زياد على احمد رضوان خطاب",
+    "الرقم القومي": "30906202100515",
+    "Arabic": 14.5,
+    "English": 14.5,
+    "Math": 12,
+    "Mechanics": 9,
+    "Physics": 10.5,
+    "social studies": 18.5,
+    "المجموع": 79,
+    "Religion": 3.5
+  },
+  {
+    "الاسم": "ريتاج هاني حسن عبدالوهاب",
+    "الرقم القومي": "30807242102385",
+    "Arabic": 17,
+    "English": 15,
+    "Math": 14.5,
+    "Mechanics": 7.5,
+    "Physics": 13.5,
+    "social studies": 19,
+    "المجموع": 86.5,
+    "Religion": 4
+  },
+  {
+    "الاسم": "رفيده حماده السيد ابوالحديد فهيم",
+    "الرقم القومي": "30812162104925",
+    "Arabic": 20,
+    "English": 12.5,
+    "Math": 15,
+    "Mechanics": 9.5,
+    "Physics": 19,
+    "social studies": 19.5,
+    "المجموع": 95.5,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "مروان محمد احمد معاذ",
+    "الرقم القومي": "30909140100911",
+    "Arabic": 17.5,
+    "English": 16.5,
+    "Math": 15,
+    "Mechanics": 5.5,
+    "Physics": 16,
+    "social studies": 19,
+    "المجموع": 89.5,
+    "Religion": 7
+  },
+  {
+    "الاسم": "احمد رأفت بدير مصيلحي عياد",
+    "الرقم القومي": "30907191602439",
+    "Arabic": 18,
+    "English": 18,
+    "Math": 12,
+    "Mechanics": 9,
+    "Physics": 12,
+    "social studies": 15.5,
+    "المجموع": 84.5,
+    "Religion": 5.5
+  },
+  {
+    "الاسم": "يس خالد شعبان محمود علم الدين",
+    "الرقم القومي": "30905040101176",
+    "Arabic": 18,
+    "English": 17,
+    "Math": 15,
+    "Mechanics": 8,
+    "Physics": 13,
+    "social studies": 20,
+    "المجموع": 91,
+    "Religion": 5
+  },
+  {
+    "الاسم": "مروان حازم حفني حامد",
+    "الرقم القومي": "30908182100273",
+    "Arabic": 18,
+    "English": 14,
+    "Math": 15,
+    "Mechanics": 9,
+    "Physics": 16.5,
+    "social studies": 18.5,
+    "المجموع": 91,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "موده اشرف صابر عبدالمنعم السعيد سليمان",
+    "الرقم القومي": "30909091301884",
+    "Arabic": 19.5,
+    "English": 16,
+    "Math": 12,
+    "Mechanics": 9,
+    "Physics": 15,
+    "social studies": 20,
+    "المجموع": 91.5,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "احمد عاطف فريد عماره",
+    "الرقم القومي": "30909011701216",
+    "Arabic": 18,
+    "English": 15,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 14,
+    "social studies": 20,
+    "المجموع": 92,
+    "Religion": 7
+  },
+  {
+    "الاسم": "عادل احمد عادل بكري احمد",
+    "الرقم القومي": "30809152103016",
+    "Arabic": 18,
+    "English": 16.5,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 20,
+    "social studies": 20,
+    "المجموع": 99.5,
+    "Religion": 9.5
+  },
+  {
+    "الاسم": "هنا محمود خيرى على بخيت",
+    "الرقم القومي": "30905080103961",
+    "Arabic": 17,
+    "English": 18.5,
+    "Math": 13.5,
+    "Mechanics": 4,
+    "Physics": 13,
+    "social studies": 16.5,
+    "المجموع": 82.5,
+    "Religion": 5.5
+  },
+  {
+    "الاسم": "اياد هاني احمد معوض صالح",
+    "الرقم القومي": "30712111401254",
+    "Arabic": 19.5,
+    "English": 15.5,
+    "Math": 13.5,
+    "Mechanics": 5,
+    "Physics": 16,
+    "social studies": 16,
+    "المجموع": 85.5,
+    "Religion": 6
+  },
+  {
+    "الاسم": "عصام الدين اسامة محمد علي",
+    "الرقم القومي": "30905218801118",
+    "Arabic": 16.5,
+    "English": 17.5,
+    "Math": 15,
+    "Mechanics": 10,
+    "Physics": 19,
+    "social studies": 20,
+    "المجموع": 98,
+    "Religion": 5
+  },
+  {
+    "الاسم": "مروان محمد ناجي سكران",
+    "الرقم القومي": "30909260601213",
+    "Arabic": 18.5,
+    "English": 15.5,
+    "Math": 15,
+    "Mechanics": 3,
+    "Physics": 9.5,
+    "social studies": 17,
+    "المجموع": 78.5,
+    "Religion": 7.5
+  },
+  {
+    "الاسم": "محمود احمد عبد الهادي عبد الحميد",
+    "الرقم القومي": "30812301700511",
+    "Arabic": 17.5,
+    "English": 17,
+    "Math": 15,
+    "Mechanics": 8,
+    "Physics": 13.5,
+    "social studies": 17.5,
+    "المجموع": 88.5,
+    "Religion": 7
+  },
+  {
+    "الاسم": "باسل محمد لطفي رضوان",
+    "الرقم القومي": "30905271400737",
+    "Arabic": 17,
+    "English": 16,
+    "Math": 12.5,
+    "Mechanics": 6,
+    "Physics": 9.5,
+    "social studies": 18.5,
+    "المجموع": 79.5,
+    "Religion": 7
+  },
+  {
+    "الاسم": "عادل ايهاب محمد عبدالسميع",
+    "الرقم القومي": "30907091702932",
+    "Arabic": 16.5,
+    "English": 14.5,
+    "Math": 12,
+    "Mechanics": 8.5,
+    "Physics": 15,
+    "social studies": 19.5,
+    "المجموع": 86,
+    "Religion": 6
+  },
+  {
+    "الاسم": "مريم محمد صبحي عويس اسماعيل",
+    "الرقم القومي": "30904102102143",
+    "Arabic": 16.5,
+    "English": 15.5,
+    "Math": 13.5,
+    "Mechanics": 6,
+    "Physics": 18.5,
+    "social studies": 20,
+    "المجموع": 90,
+    "Religion": 5.5
+  },
+  {
+    "الاسم": "زينة أحمد إسماعيل إمام",
+    "الرقم القومي": "30912172101902",
+    "Arabic": 15,
+    "English": 10.5,
+    "Math": 13,
+    "Mechanics": 5,
+    "Physics": 10.5,
+    "social studies": 17.5,
+    "المجموع": 71.5,
+    "Religion": 5
+  },
+  {
+    "الاسم": "ملك حسن احمد حسن عبدالفتاح",
+    "الرقم القومي": "30902202100323",
+    "Arabic": 17,
+    "English": 17,
+    "Math": 11.5,
+    "Mechanics": 5,
+    "Physics": 12.5,
+    "social studies": 19,
+    "المجموع": 82,
+    "Religion": 4
+  },
+  {
+    "الاسم": "حبيبة عبد السلام عطية عبد السلام",
+    "الرقم القومي": "30810222201345",
+    "Arabic": 20,
+    "English": 15,
+    "Math": 14.5,
+    "Mechanics": 9.5,
+    "Physics": 18.5,
+    "social studies": 19,
+    "المجموع": 96.5,
+    "Religion": 7
+  },
+  {
+    "الاسم": "محمد هاني محمد قناوي",
+    "الرقم القومي": "30807042103557",
+    "Arabic": 15.5,
+    "English": 15,
+    "Math": 9,
+    "Mechanics": 5,
+    "Physics": 7.5,
+    "social studies": 18.5,
+    "المجموع": 70.5,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "مريم احمد نبيل قطب احمد",
+    "الرقم القومي": "30906030100348",
+    "Arabic": 16,
+    "English": 17.5,
+    "Math": 14.5,
+    "Mechanics": 5,
+    "Physics": 15.5,
+    "social studies": 18.5,
+    "المجموع": 87,
+    "Religion": 7
+  },
+  {
+    "الاسم": "كريم صلاح عبد النبي جلو",
+    "الرقم القومي": "30911231500259",
+    "Arabic": 15,
+    "English": 18,
+    "Math": 11,
+    "Mechanics": 5,
+    "Physics": 13.5,
+    "social studies": 20,
+    "المجموع": 82.5,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "بسام رمضان حسن خليل",
+    "الرقم القومي": "30803070102498",
+    "Arabic": 16,
+    "English": 12.5,
+    "Math": 15,
+    "Mechanics": 8.5,
+    "Physics": 16.5,
+    "social studies": 16,
+    "المجموع": 84.5,
+    "Religion": 5
+  },
+  {
+    "الاسم": "خالد رزق احمد السيد",
+    "الرقم القومي": "30805170102234",
+    "Arabic": 16,
+    "English": 14.5,
+    "Math": 13,
+    "Mechanics": 5,
+    "Physics": 12,
+    "social studies": 19.5,
+    "المجموع": 80,
+    "Religion": 5.5
+  },
+  {
+    "الاسم": "احمد عبدالله محمد عبدالعظيم هندى",
+    "الرقم القومي": "30908270601053",
+    "Arabic": 14,
+    "English": 15,
+    "Math": 14.5,
+    "Mechanics": 9.5,
+    "Physics": 13,
+    "social studies": 18.5,
+    "المجموع": 84.5,
+    "Religion": 5
+  },
+  {
+    "الاسم": "حمزة مصطفي شعبان فرغلي",
+    "الرقم القومي": "30902070104294",
+    "Arabic": 17.5,
+    "English": 12,
+    "Math": 13.5,
+    "Mechanics": 6.5,
+    "Physics": 9,
+    "social studies": 20,
+    "المجموع": 78.5,
+    "Religion": 6
+  },
+  {
+    "الاسم": "حسام جمال عويس عباس اسماعيل",
+    "الرقم القومي": "30906130104537",
+    "Arabic": 14,
+    "English": 18,
+    "Math": "غ",
+    "Mechanics": 2,
+    "Physics": 4.5,
+    "social studies": 19.5,
+    "المجموع": 58,
+    "Religion": 4
+  },
+  {
+    "الاسم": "داليا رامي جمال حامد وهبه",
+    "الرقم القومي": "30905060600748",
+    "Arabic": 17.5,
+    "English": 14.5,
+    "Math": 10,
+    "Mechanics": 4,
+    "Physics": 8,
+    "social studies": 17.5,
+    "المجموع": 71.5,
+    "Religion": 6.5
+  },
+  {
+    "الاسم": "جني اسامه فتحي احمد سويلم",
+    "الرقم القومي": "30902211403363",
+    "Arabic": 17,
+    "English": 12,
+    "Math": 8.5,
+    "Mechanics": 0,
+    "Physics": 6.5,
+    "social studies": 20,
+    "المجموع": 64,
+    "Religion": 5.5
+  }
+]
+
+    const nationalIdInput = document.getElementById("nationalIdInput");
+    const searchButton = document.getElementById("searchButton");
+    const resultsSection = document.getElementById("resultsSection");
+    const noResults = document.getElementById("noResults");
+    const studentName = document.getElementById("studentName");
+    const studentNationalId = document.getElementById("studentNationalId");
+    const gradesTableBody = document.getElementById("gradesTableBody");
+
+    function searchStudent() {
+      const nationalId = nationalIdInput.value.trim();
+      if (!nationalId) {
+        alert("Please enter a National ID");
+        return;
+      }
+      const student = students.find((s) => s["الرقم القومي"] === nationalId);
+      if (student) {
+        displayStudentInfo(student);
+        resultsSection.style.display = "block";
+        noResults.style.display = "none";
+      } else {
+        resultsSection.style.display = "none";
+        noResults.style.display = "block";
+      }
+    }
+
+    function displayStudentInfo(student) {
+      studentName.textContent = student["الاسم"];
+      studentNationalId.textContent = student["الرقم القومي"];
+      gradesTableBody.innerHTML = "";
+
+      const subjects = [
+        { name: "Arabic", grade: student["Arabic"], max: 20 },
+        { name: "English", grade: student["English"], max: 20 },
+        { name: "Math", grade: student["Math"], max: 15 },
+        { name: "Mechanics", grade: student["Mechanics"], max: 10 },
+        { name: "Physics", grade: student["Physics"], max: 20 },
+        { name: "Social Studies", grade: student["social studies"], max: 20 },
+      ];
+
+      let totalGrade = 0;
+      let totalMax = 0;
+      let hasGrades = false;
+
+      subjects.forEach((subject) => {
+        const row = document.createElement("tr");
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = subject.name;
+        nameCell.className = "subject-name";
+        row.appendChild(nameCell);
+
+        const gradeCell = document.createElement("td");
+        gradeCell.textContent = subject.grade;
+        gradeCell.className = "grade-value";
+        row.appendChild(gradeCell);
+
+        const maxCell = document.createElement("td");
+        maxCell.textContent = subject.max;
+        row.appendChild(maxCell);
+
+        gradesTableBody.appendChild(row);
+
+        // Only count numeric grades
+        if (typeof subject.grade === "number") {
+          totalGrade += subject.grade;
+          totalMax += subject.max;
+          hasGrades = true;
+        }
+      });
+
+      // Total row
+      const totalRow = document.createElement("tr");
+      totalRow.className = "total-row";
+
+      const totalNameCell = document.createElement("td");
+      totalNameCell.textContent = "Total";
+      totalRow.appendChild(totalNameCell);
+
+      const totalGradeCell = document.createElement("td");
+      totalGradeCell.textContent = hasGrades ? totalGrade : "غ";
+      totalGradeCell.className = "grade-value";
+      totalRow.appendChild(totalGradeCell);
+
+      const totalMaxCell = document.createElement("td");
+      totalMaxCell.textContent = hasGrades ? totalMax : "-";
+      totalRow.appendChild(totalMaxCell);
+
+      gradesTableBody.appendChild(totalRow);
+
+      // Religion row
+      const religionRow = document.createElement("tr");
+      const religionNameCell = document.createElement("td");
+      religionNameCell.textContent = "Religion";
+      religionNameCell.className = "subject-name";
+      religionRow.appendChild(religionNameCell);
+
+      const religionGrade = student["Religion"];
+      const religionGradeCell = document.createElement("td");
+      religionGradeCell.textContent = religionGrade;
+      religionGradeCell.className = "grade-value";
+      religionRow.appendChild(religionGradeCell);
+
+      const religionMaxCell = document.createElement("td");
+      religionMaxCell.textContent = religionGrade === "غ" ? "-" : 10;
+      religionRow.appendChild(religionMaxCell);
+
+      gradesTableBody.appendChild(religionRow);
+    }
+
+    searchButton.addEventListener("click", searchStudent);
+    nationalIdInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") searchStudent();
+    });
+    window.addEventListener("load", () => nationalIdInput.focus());
+  </script>
+</body>
+</html>
