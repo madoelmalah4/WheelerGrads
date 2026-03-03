@@ -172,13 +172,13 @@
 
     <div class="search-section">
       <div class="search-box">
-        <input type="text" id="nationalIdInput" placeholder="Enter your National ID" />
+        <input type="text" id="nationalIdInput" placeholder="Enter your National ID" value="" />
         <button id="searchButton">Search</button>
       </div>
       <p class="instructions">Enter your 14-digit National ID to view your grades</p>
     </div>
 
-    <div class="no-results" id="noResults">
+    <div class="no-results" id="noResults" style="display: none;">
       <p>🔍</p>
       <h3>No student found</h3>
       <p>Please check your National ID and try again</p>
@@ -208,9 +208,9 @@
   </div>
 
   <script>
-    // One sample student from the JSON file (first record)
+    // Just one sample student - you can add more later
     const students = [
-  {
+      {
     "اسم الطالب كاملا": "احمد حازم محمود راشد",
     "الرقم القومي": "30811268800738",
     "اللغة العربية": 23.41,
@@ -1211,7 +1211,7 @@
     "الدرجة الكلية": 68.83,
     "التربية الدينية": 6.6
   }
-];
+    ];
 
     const nationalIdInput = document.getElementById("nationalIdInput");
     const searchButton = document.getElementById("searchButton");
@@ -1221,8 +1221,17 @@
     const studentNationalId = document.getElementById("studentNationalId");
     const gradesTableBody = document.getElementById("gradesTableBody");
 
+    // Clear input field on page load
+    window.addEventListener("load", () => {
+      nationalIdInput.value = "";
+      // Make sure results are hidden initially
+      resultsSection.style.display = "none";
+      noResults.style.display = "none";
+    });
+
     function searchStudent() {
       const nationalId = nationalIdInput.value.trim();
+      
       if (!nationalId) {
         alert("Please enter a National ID");
         return;
@@ -1264,7 +1273,7 @@
 
       // Loop through academic subjects
       subjects.forEach((subject) => {
-        const grade = student[subject.key] || 0; // fallback to 0 if missing
+        const grade = student[subject.key] || 0;
         totalGrade += grade;
         totalMax += subject.max;
 
@@ -1287,7 +1296,7 @@
         gradesTableBody.appendChild(row);
       });
 
-      // Total row for academic subjects (excluding religion)
+      // Total row for academic subjects
       const totalRow = document.createElement("tr");
       totalRow.className = "total-row";
 
@@ -1306,7 +1315,7 @@
 
       gradesTableBody.appendChild(totalRow);
 
-      // Religion row (التربية الدينية)
+      // Religion row
       const religionRow = document.createElement("tr");
       const religionNameCell = document.createElement("td");
       religionNameCell.textContent = "Religion";
@@ -1325,11 +1334,9 @@
 
       gradesTableBody.appendChild(religionRow);
 
-      // ******************************
-      // Display الدراسة الفنية التخصصية (Technical Evaluation)
-      // ******************************
+      // Technical Evaluation row
       const techRow = document.createElement("tr");
-      techRow.className = "technical-row"; // optional styling
+      techRow.className = "technical-row";
 
       const techNameCell = document.createElement("td");
       techNameCell.textContent = "Competencies";
@@ -1337,14 +1344,12 @@
       techRow.appendChild(techNameCell);
 
       const techValueCell = document.createElement("td");
-      // The value is typically text like "جدير", so we display it as is, no "toFixed"
       techValueCell.textContent = student["الدراسة الفنية التخصصية"] || "-";
       techValueCell.className = "grade-value";
       techRow.appendChild(techValueCell);
 
-      // For the "Out of" column, we put a dash or leave empty because it's not a numeric grade
       const techOutOfCell = document.createElement("td");
-      techOutOfCell.textContent = "—"; // em dash to indicate not applicable
+      techOutOfCell.textContent = "—";
       techRow.appendChild(techOutOfCell);
 
       gradesTableBody.appendChild(techRow);
@@ -1354,15 +1359,6 @@
     searchButton.addEventListener("click", searchStudent);
     nationalIdInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") searchStudent();
-    });
-
-    // Pre-fill with the sample student ID for easy testing
-    window.addEventListener("load", () => {
-      nationalIdInput.value = "30811268800738";
-      // Automatically perform search so results show immediately on load
-      setTimeout(() => {
-        searchStudent();
-      }, 100);
     });
   </script>
 </body>
