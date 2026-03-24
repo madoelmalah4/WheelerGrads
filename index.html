@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Student Grades Search</title>
+  <title>نتيجة الربع الثالث</title>
   <style>
-    /* ... (All your existing CSS remains the same) ... */
     * {
       margin: 0;
       padding: 0;
@@ -146,8 +145,8 @@
       color: #000;
     }
     .religion-row td {
-        background: #fafafa;
-        font-style: italic;
+      background: #fafafa;
+      font-style: italic;
     }
     .no-results {
       text-align: center;
@@ -203,9 +202,9 @@
         <tbody id="gradesTableBody"></tbody>
         <tfoot>
           <tr class="total-row">
-            <td>Grand Total</td>
+            <td>Total</td>
             <td id="totalGradeValue" class="grade-value">-</td>
-            <td id="totalMax-placeholder">105</td>
+            <td>105</td>
           </tr>
           <tr id="religionRow" class="religion-row">
             <td class="subject-name">Religion</td>
@@ -222,6 +221,7 @@
   </div>
 
   <script>
+    // Example data including the "غ" case
     const students =[
   {
     "student_code": "524002",
@@ -608,7 +608,7 @@
     "English": 6.0,
     "Math": 10.5,
     "Mechanics": 7.0,
-    "Physics": null,
+    "Physics": "غ",
     "social_studies": 17.0,
     "total": 55.5,
     "Religion": 5.5
@@ -916,10 +916,10 @@
     "student_code": "524097",
     "name": "حسام جمال عويس عباس اسماعيل",
     "id": "30906130104537",
-    "Arabic": null,
+    "Arabic": "غ",
     "English": 11.0,
     "Math": 11.0,
-    "Mechanics": null,
+    "Mechanics": "غ",
     "Physics": 11.5,
     "social_studies": 10.5,
     "total": 44.0,
@@ -1261,19 +1261,24 @@
       studentName.textContent = student["name"];
       studentNationalId.textContent = student["id"];
       studentCode.textContent = student["student_code"];
-      totalGradeValue.textContent = student["total"].toFixed(2);
+      
+      // Safe handle for Total
+      const total = student["total"];
+      totalGradeValue.textContent = (typeof total === 'number') ? total.toFixed(2) : total;
 
-      // Handle Religion separately (placed in footer)
-      const relGrade = student["Religion"] || 0;
-      religionGradeValue.textContent = relGrade.toFixed(2);
-      religionGradeValue.classList.remove("grade-fail");
-      if (relGrade < 5) { // 10 / 2 = 5
+      // Safe handle for Religion
+      const relGrade = student["Religion"];
+      if (relGrade === "غ") {
+        religionGradeValue.textContent = "غ";
         religionGradeValue.classList.add("grade-fail");
+      } else {
+        const numRel = parseFloat(relGrade) || 0;
+        religionGradeValue.textContent = numRel.toFixed(2);
+        religionGradeValue.classList.toggle("grade-fail", numRel < 5);
       }
 
       gradesTableBody.innerHTML = "";
 
-      // Main academic subjects (excluding Religion)
       const subjectConfig = [
         { key: "Arabic", label: "Arabic", max: 20 },
         { key: "English", label: "English", max: 20 },
@@ -1284,7 +1289,7 @@
       ];
 
       subjectConfig.forEach(subject => {
-        const grade = student[subject.key] || 0;
+        const grade = student[subject.key];
         const row = document.createElement("tr");
 
         const nameCell = document.createElement("td");
@@ -1293,11 +1298,17 @@
         row.appendChild(nameCell);
 
         const gradeCell = document.createElement("td");
-        gradeCell.textContent = grade.toFixed(2);
         gradeCell.className = "grade-value";
         
-        if (grade < (subject.max / 2)) {
-          gradeCell.classList.add("grade-fail");
+        if (grade === "غ") {
+            gradeCell.textContent = "غ";
+            gradeCell.classList.add("grade-fail");
+        } else {
+            const numGrade = parseFloat(grade) || 0;
+            gradeCell.textContent = numGrade.toFixed(2);
+            if (numGrade < (subject.max / 2)) {
+                gradeCell.classList.add("grade-fail");
+            }
         }
         row.appendChild(gradeCell);
 
